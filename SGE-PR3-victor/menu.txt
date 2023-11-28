@@ -1,0 +1,8 @@
+nano menu.txt			# Documenta o crea nuevas opciones según tus necesidades
+set_permissions		# Establece permisos en directorios odoo y pgadmin4
+docker-compose up -d		# 
+docker-compose down		# 
+docker-compose logs -f		# 
+save_backup		# Crea un fichero backup con marca temporal
+restore_backup		# Restaura el último backup
+exit				# Salir

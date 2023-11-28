@@ -1,0 +1,82 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres.${DOMAIN}
+    hostname: postgres.${DOMAIN}
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo${ID_EQUIPO}
+      - POSTGRES_USER=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata:/var/lib/postgresql/data/pgdata
+    command: -p ${ID_EQUIPO}432 # change default port
+    expose:
+      - ${ID_EQUIPO}432
+  odoo:
+    image: odoo:16.0
+    container_name: odoo.${DOMAIN}
+    hostname: odoo.${DOMAIN}
+    depends_on:
+      - postgres
+    ports:
+      - "${ID_EQUIPO}069:${ID_EQUIPO}069"
+    tty: true
+    command: -- --dev=reload
+    volumes:
+      - ./odoo/extra-addons:/mnt/third-party-addons
+      - ./odoo/config:/etc/odoo
+      - odoo_log:/var/log/odoo/
+      - odoo_data:/var/lib/odoo
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin4.${DOMAIN}
+    hostname: pgadmin4.${DOMAIN}
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin@${DOMAIN}
+      PGADMIN_DEFAULT_PASSWORD: pgadmin${ID_EQUIPO}
+      PGADMIN_LISTEN_PORT: 80
+      PGADMIN_SERVER_JSON_FILE: /pgadmin4/servers.json
+    ports:
+      - ${ID_EQUIPO}080:80
+    links:
+      - "postgres:pg-server"
+    volumes:
+      - ./pgadmin4/servers.json:/pgadmin4/servers.json
+  mailserver:
+    # Solo para desarrollo y pruebas, servidor de correo ficticio
+    image: greenmail/standalone:1.6.11
+    hostname: mailserver.${DOMAIN} # Variable definida en el fichero ".env"
+    container_name: mailserver.${DOMAIN}
+    # Configuramos algunas cuentas dentro del dominio que hemos parametrizado
+    # En la realidad, cliente y proveedor tendrían cuenta en otro servidor de correo
+    # La autenticación del usuario se realizará poniendo el email al completo
+    # El servidor validará la contraseña, en todos los casos se ha establecido "pass"
+    environment:
+      - GREENMAIL_OPTS=-Dgreenmail.smtps.port=${ID_EQUIPO}025 -Dgreenmail.imaps.port=${ID_EQUIPO}143 -Dgreenmail.smtp.port=${ID_EQUIPO}465 -Dgreenmail.imap.port=${ID_EQUIPO}993 -Dgreenmail.hostname=0.0.0.0 -Dgreenmail.users=admin:pass@${DOMAIN},empleado:pass@${DOMAIN},cliente:pass@cliente-${ID_EQUIPO}.sge,proveedor:pass@proveedor-${ID_EQUIPO}.sge,catchall:pass@${DOMAIN},bounce:pass@${DOMAIN} -Dgreenmail.users.login=email
+    ports:
+      - ${ID_EQUIPO}081:8080  # API    Servicio web API-REST para consultar y gestionar servidor
+    expose:
+      - ${ID_EQUIPO}025
+      - ${ID_EQUIPO}143
+      - ${ID_EQUIPO}465
+      - ${ID_EQUIPO}993
+  webmail:
+    # Solo para desarrollo y pruebas, cliente de correo
+    image: roundcube/roundcubemail:1.6.0-apache
+    container_name: webmail.${DOMAIN}
+    hostname: webmail.${DOMAIN}
+    depends_on:
+      - mailserver
+    ports:
+      - ${ID_EQUIPO}082:80
+    environment:
+      - ROUNDCUBEMAIL_DEFAULT_HOST=mailserver.${DOMAIN}  # IMAP(s) server - tls:// prefix for STARTTLS, ssl:// for SSL/TLS
+      - ROUNDCUBEMAIL_DEFAULT_PORT=${ID_EQUIPO}993 # IMAP port
+      - ROUNDCUBEMAIL_SMTP_SERVER=mailserver.${DOMAIN}   # SMTP(s) server - tls:// prefix for STARTTLS, ssl:// for SSL/TLS
+      - ROUNDCUBEMAIL_SMTP_PORT=${ID_EQUIPO}465    # SMTP port
+volumes:
+    pgdata:
+    odoo_log:
+    odoo_data:
