@@ -3,6 +3,9 @@ set_permissions		# Establece permisos en directorios odoo y pgadmin4
 docker-compose up -d		# 
 docker-compose down		# 
 docker-compose logs -f		# 
+docker restart odoo.canaveral-11.sge	# Reinicia odoo
+docker exec -it odoo.canaveral-11.sge bash	# Entrar a odoo
+docker exec -it postgres.canaveral-11.sge bash	# Entrar en postgres
 save_backup		# Crea un fichero backup con marca temporal
 restore_backup		# Restaura el último backup
 exit				# Salir
