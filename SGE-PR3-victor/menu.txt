@@ -6,6 +6,7 @@ docker-compose logs -f		#
 docker restart odoo.canaveral-11.sge	# Reinicia odoo
 docker exec -it odoo.canaveral-11.sge bash	# Entrar a odoo
 docker exec -it postgres.canaveral-11.sge bash	# Entrar en postgres
+docker exec -it pgadmin4.canaveral-11.sge sh	# Entrar en pgadmin
 save_backup		# Crea un fichero backup con marca temporal
 restore_backup		# Restaura el último backup
 exit				# Salir
